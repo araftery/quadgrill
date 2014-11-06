@@ -9,7 +9,7 @@ pip install -r requirements.txt
 * Add this to your virtual environment's `postactivate` hook (located at `path/to/venv/bin/postactivate`):
 
 ```
-export DJANGO_SETTINGS_MOUDLE=settings.dev
+export DJANGO_SETTINGS_MOUDLE="settings.dev"
 ```
 * Deactivate, and then reactivate the venv
 * Create a Postgres database called `quadgrill`
