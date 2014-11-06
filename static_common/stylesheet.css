@@ -1,0 +1,39 @@
+body
+{
+    padding-top: 60px;
+}
+
+.social-icons i
+{
+    /* navbar height */
+    line-height: 50px;
+}
+
+
+.fa-facebook, .fa-instagram
+{
+    color: #fff;
+}
+
+.facebook-icon .fa-circle
+{
+    color: #3b5998;
+}
+
+.instagram-icon .fa-circle
+{
+    color: #517fa4;
+}
+
+@media only screen and (max-width: 767px)  {
+    .desktop-only
+    {
+        display:none; 
+    }
+}
+@media only screen and (min-width: 768px)  {
+    .smallscreen-only
+    {
+        display:none;
+    }
+}

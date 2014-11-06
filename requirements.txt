@@ -1,0 +1,8 @@
+Django==1.7.1
+django-braces==1.4.0
+django-crispy-forms==1.4.0
+django-phonenumber-field==0.6
+path.py==7.0
+phonenumbers==7.0.0
+psycopg2==2.5.4
+six==1.8.0

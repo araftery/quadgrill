@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Order
+{% endblock title %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-8">
+        <h2>Menu</h2>
+        {% if object_list %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in object_list %}
+                        <tr>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.description }}</td>
+                            <td>${{ item.price }}</td>
+                            <td><a href="#" class="js-add-item" data-pk="{{ item.pk }}" data-name="{{ item.name }}" data-price="{{ item.price }}">Add to Order</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="alert alert-danger">Sorry, the menu is currently empty :(.</div>
+        {% endif %}
+    </div>
+
+    <div class="col-sm-4">
+        <h2>Your Order</h2>
+        <table class="table table-striped js-order-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Remove</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <div class="extras hidden">
+            <div class="form-group">
+                <label for="js-tip">Tip:</label>
+                <input type="text" id="js-tip" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label for="js-first">First Name:</label>
+                <input type="text" id="js-first" placeholder="First Name...">
+            </div>
+            <div class="form-group">
+                <label for="js-last">Last Name:</label>
+                <input type="text" id="js-last" placeholder="Last Name...">
+            </div>
+            <div class="form-group">
+                <label for="js-phone">Phone Number:</label>
+                <input type="text" id="js-phone" placeholder="Phone Number...">
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" id="order_submit_btn">Submit Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+var $order_table = $('.js-order-table');
+var items_in_order = [];
+$('.js-add-item').on('click', function(){
+    var $this = $(this);
+    var pk = $this.data('pk');
+    var name = $this.data('name');
+    var price = $this.data('price');
+
+    if ($.inArray(pk, items_in_order) === -1)
+    {
+        // add item to order table
+        $('.js-order-table tbody').append('<tr class="js-item-' + pk + '" data-pk="' + pk + '" data-quantity="1"><td>' + name + '</td><td>$' + price + '</td><td><input type="text" class="quantity js-quantity" value="1" maxlength="2" /></td><td><a href="#" class="js-remove-item" data-pk="' + pk + '">Remove</a></td></tr>');
+        items_in_order.push(pk);      
+    }
+    else
+    {
+        // increase quantity by 1
+        var $row = $('.js-order-table tbody .js-item-' + pk);
+        var $quantity_input = $row.find('.js-quantity')
+        var quantity = parseInt($quantity_input.val());
+        quantity++;
+        $row.data('quantity', quantity);
+        $quantity_input.val(quantity);
+    }
+    $('.extras').removeClass('hidden');
+});
+
+$('.js-order-table').on('click', '.js-remove-item', function(){
+    var $this = $(this);
+    var pk = $this.data('pk');
+    var $row = $('.js-order-table tbody .js-item-' + pk).remove();
+    items_in_order.pop(pk);
+    if (items_in_order.length == 0)
+    {  
+        $('.extras').addClass('hidden');
+    }
+});
+
+$('#order_submit_btn').on('click', function(){
+    var items = {};
+    $('.js-order-table tbody tr').each(function(){
+        $row = $(this);
+        var $quantity_input = $row.find('.js-quantity')
+        var quantity = parseInt($quantity_input.val());
+        var pk = $row.data('pk');
+        items[pk] = quantity;
+    });
+    var tip = parseFloat($('#js-tip').val());
+    if (!tip)
+    {
+        tip = 0;
+    }
+
+    var first_name = $('#js-first').val();
+    var last_name = $('#js-last').val();
+    var phone_number = $('#js-phone').val();
+
+    var data = {
+        'tip': tip,
+        'first_name': first_name,
+        'last_name': last_name,
+        'phone_number': phone_number,
+        'items': items,
+    };
+    $.ajax({
+      type: "POST",
+      url: '/order/submit/',
+      data: {'data': JSON.stringify(data, null, 2)},
+      success: function(data) {
+        if (data['status'] == 'success')
+        {
+            sweetAlert("Success!", "Your order has been submitted! You should receive a text shortly confirming your order's status.", "success");
+        }
+        else
+        {
+            console.log(data);
+            sweetAlert("Oops...", "Something went wrong!", "error");
+        }
+      },
+      error: function(data) {
+        sweetAlert("Oops...", "Something went wrong!", "error");
+      },
+    });
+});
+
+</script>
+{% endblock content %}

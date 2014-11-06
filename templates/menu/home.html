@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Menu
+{% endblock title %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-8">
+        <h2>Current Menu</h2>
+        {% if object_list %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in object_list %}
+                        <tr>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.description }}</td>
+                            <td>${{ item.price }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="alert alert-danger">Sorry, the menu is currently empty :(.</div>
+        {% endif %}
+    </div>
+
+    <div class="col-sm-4">
+        <h2>Hours</h2>
+        <div>
+            <strong>Sunday - Thursday</strong>: 11:30pm - 1:00am
+        </div>
+        <div>
+            <strong>Friday - Saturday</strong>: 12:00am - 3:00am
+        </div>
+    </div>
+{% endblock content %}
