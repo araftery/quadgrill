@@ -79,6 +79,4 @@ class SubmitOrder(JSONResponseMixin, View):
         for item, quantity in order_items:
             order.add_item(item, quantity)
 
-        print order, order.orderitem_set.all(), order.total
-
         return self.render_json_response({'status': 'success'})
