@@ -40,6 +40,8 @@ class Order(models.Model):
     tip = models.DecimalField(max_digits=6, decimal_places=2)
     customer = models.ForeignKey(Customer)
     accepted = models.BooleanField(default=False)
+    time_accepted = models.DateTimeField(null=True, blank=True)
+    time_estimate = models.IntegerField(null=True, blank=True)
     fulfilled = models.BooleanField(default=False)
     paid = models.BooleanField(default=False)
 

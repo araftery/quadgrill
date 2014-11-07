@@ -37,3 +37,31 @@ body
         display:none;
     }
 }
+
+.orderitem-list
+{
+    list-style: none;
+    padding: 0;
+}
+
+.choice-btn
+{
+    font-size: 28px;
+    text-decoration:none;
+    color:#000;
+}
+
+.accept-btn:hover
+{
+    color: #5cb85c;
+}
+
+.decline-btn:hover
+{
+    color: #d9534f;
+}
+
+.text-center
+{
+    text-align:center;
+}

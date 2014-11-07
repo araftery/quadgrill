@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Orders Dashboard
+{% endblock title %}
+
+{% block content %}
+
+<!-- handlebars template -->
+<script id="incoming_orders_cell" type="text/x-handlebars-template">
+<td class="text-center"><a href="#" class="choice-btn accept-btn"><i class="fa fa-check-circle"></i></a></td>
+</script>
+
+
+
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Orders in Progress</h2>
+                <table class="table table-striped js-orders-in-progress">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Customer</th>
+                            <th>Payment Type</th>
+                            <th>Order</th>
+                            <th>Tip</th>
+                            <th>Total</th>
+                            <th>Cancel</th>
+                            <th>Completed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for order in orders_in_progress %}
+                        <tr class="order-{{ order.pk }}">
+                            <td>{{ order.time|date:"d/m g:i a" }}</td>
+                            <td>{{ order.customer.full_name }}</td>
+                            <td>{{ order.payment_type }}</td>
+                            <td><ul class="orderitem-list">{% for order_item in order.orderitem_set.all %}
+                                <li>{{ order_item.quantity }} x {{ order_item.item.name }}</li>
+                            {% endfor %}
+                            </ul></td>
+                            <td>${{ order.tip }}</td>
+                            <td>${{ order.total }}</td>
+                            <td class="text-center"><a href="#" class="choice-btn decline-btn js-accepted-order-cancel-btn"><i class="fa fa-times-circle"></i></a></td>
+                            <td class="text-center"><a href="#" class="choice-btn accept-btn js-order-complete-btn"><i class="fa fa-check-circle"></i></a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div><!-- /.col -->
+        </div><!-- /.row -->
+
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Incoming Orders</h2>
+                <table class="table table-striped js-incoming-orders">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Customer</th>
+                            <th>Payment Type</th>
+                            <th>Order</th>
+                            <th>Tip</th>
+                            <th>Total</th>
+                            <th>Decline</th>
+                            <th>Accept</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for order in incoming_orders %}
+                        <tr class="order-{{ order.pk }}">
+                            <td>{{ order.time|date:"d/m g:i a" }}</td>
+                            <td>{{ order.customer.full_name }}</td>
+                            <td>{{ order.payment_type }}</td>
+                            <td><ul class="orderitem-list">{% for order_item in order.orderitem_set.all %}
+                                <li>{{ order_item.quantity }} x {{ order_item.item.name }}</li>
+                            {% endfor %}
+                            </ul></td>
+                            <td>${{ order.tip }}</td>
+                            <td>${{ order.total }}</td>
+                            <td class="text-center"><a href="#" class="choice-btn decline-btn js-incoming-order-decline-btn"><i class="fa fa-times-circle"></i></a></td>
+                            <td class="text-center"><a href="#" class="choice-btn accept-btn js-accept-modal-btn" data-orderpk="{{ order.pk }}"><i class="fa fa-check-circle"></i></a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div><!-- /.col -->
+        </div><!-- /.row -->
+    </div><!-- /.col -->
+
+    <div class="col-md-4">
+        <h2>Recently Completed</h2>
+    </div><!-- /.col -->
+</div><!-- /.row -->
+
+<!-- post-accept modal -->
+<div class="modal fade" id="accept_modal" tabindex="-1" role="dialog" aria-labelledby="accept_modal_label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="accept_modal_label">How long will this order take?</h4>
+      </div>
+      <form role="form">
+        <div class="modal-body">
+        <div class="form-errors"></div>
+          <div class="form-group">
+            <input type="text" class="form-control js-minutes-estimate" name="estimate" required="required" placeholder="Number of minutes...">
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary js-accept-order-btn" data-orderpk="">Accept</button>
+    </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$accept_modal = $('#accept_modal');
+$form_errors = $('.form-errors');
+$minutes_estimate = $('.js-minutes-estimate');
+$incoming_orders = $('.js-incoming-orders');
+$orders_in_progress = $('.js-orders-in-progress');
+
+$(document).on('click', '.js-accept-modal-btn', function(){
+    $this = $(this);
+    var orderpk = $this.data('orderpk');
+    $('.js-accept-order-btn').data('orderpk', orderpk);
+    $form_errors.html();
+    $accept_modal.modal('show');
+    return false;
+});
+
+$(document).on('click', '.js-accept-order-btn', function(){
+    $form_errors.html();
+    var minutes_estimate = parseInt($minutes_estimate.val())
+    var orderpk = $this.data('orderpk');
+    if (!minutes_estimate)
+    {
+        $form_errors.html('<p class="alert alert-danger">A positive integer is required.</p>');
+        return false;
+    }
+
+    $this = $(this);
+    $.ajax({
+      type: "POST",
+      url: '/dashboard/accept-order/',
+      data: {'order': orderpk, 'minutes_estimate': minutes_estimate},
+      success: function(data) {
+        if (data['status'] == 'success')
+        {
+            $row = $incoming_orders.find('tbody tr.order-' + orderpk);
+            $row.find('.js-accept-modal-btn').removeClass('js-accept-modal-btn').addClass('.js-order-complete-btn');
+            $row.find('.js-incoming-order-decline-btn').removeClass('js-incoming-order-decline-btn').addClass('.js-accepted-order-cancel-btn');
+            $orders_in_progress.append($row);
+
+            $accept_modal.modal('hide');
+            return true;
+        }
+        else
+        {
+            if (data.errors.minutes_estimate)
+            {
+                $form_errors.html('<p class="alert alert-danger">A positive integer is required.</p>');
+                return false;
+            }
+            else
+            {
+                $accept_modal.modal('hide');
+                sweetAlert("Oops...", "Something went wrong!", "error");
+                return false;
+            }
+        }
+      },
+      error: function(data) {
+        $accept_modal.modal('hide');
+        sweetAlert("Oops...", "Something went wrong!", "error");
+        return true;
+      },
+    });
+    return false;
+});
+
+$(document).on('click', '.js-order-complete-btn', function(){
+
+});
+
+</script>
+{% endblock content %}
