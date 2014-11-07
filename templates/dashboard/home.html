@@ -44,8 +44,8 @@
                             </ul></td>
                             <td>${{ order.tip }}</td>
                             <td>${{ order.total }}</td>
-                            <td class="text-center"><a href="#" class="choice-btn decline-btn js-accepted-order-cancel-btn"><i class="fa fa-times-circle"></i></a></td>
-                            <td class="text-center"><a href="#" class="choice-btn accept-btn js-order-complete-btn"><i class="fa fa-check-circle"></i></a></td>
+                            <td class="text-center"><a href="#" class="choice-btn decline-btn js-accepted-order-cancel-btn" data-orderpk="{{ order.pk }}"><i class="fa fa-times-circle"></i></a></td>
+                            <td class="text-center"><a href="#" class="choice-btn accept-btn js-order-complete-btn" data-orderpk="{{ order.pk }}"><i class="fa fa-check-circle"></i></a></td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -81,7 +81,7 @@
                             </ul></td>
                             <td>${{ order.tip }}</td>
                             <td>${{ order.total }}</td>
-                            <td class="text-center"><a href="#" class="choice-btn decline-btn js-incoming-order-decline-btn"><i class="fa fa-times-circle"></i></a></td>
+                            <td class="text-center"><a href="#" class="choice-btn decline-btn js-incoming-order-decline-btn" data-orderpk="{{ order.pk }}"><i class="fa fa-times-circle"></i></a></td>
                             <td class="text-center"><a href="#" class="choice-btn accept-btn js-accept-modal-btn" data-orderpk="{{ order.pk }}"><i class="fa fa-check-circle"></i></a></td>
                         </tr>
                     {% endfor %}
@@ -149,14 +149,14 @@ $(document).on('click', '.js-accept-order-btn', function(){
     $this = $(this);
     $.ajax({
       type: "POST",
-      url: '/dashboard/accept-order/',
+      url: "{% url 'dashboard:accept-order' %}",
       data: {'order': orderpk, 'minutes_estimate': minutes_estimate},
       success: function(data) {
         if (data['status'] == 'success')
         {
             $row = $incoming_orders.find('tbody tr.order-' + orderpk);
-            $row.find('.js-accept-modal-btn').removeClass('js-accept-modal-btn').addClass('.js-order-complete-btn');
-            $row.find('.js-incoming-order-decline-btn').removeClass('js-incoming-order-decline-btn').addClass('.js-accepted-order-cancel-btn');
+            $row.find('.js-accept-modal-btn').removeClass('js-accept-modal-btn').addClass('js-order-complete-btn');
+            $row.find('.js-incoming-order-decline-btn').removeClass('js-incoming-order-decline-btn').addClass('js-accepted-order-cancel-btn');
             $orders_in_progress.append($row);
 
             $accept_modal.modal('hide');
@@ -186,8 +186,114 @@ $(document).on('click', '.js-accept-order-btn', function(){
     return false;
 });
 
-$(document).on('click', '.js-order-complete-btn', function(){
+$(document).on('click', '.js-accepted-order-cancel-btn', function(){
+    $this = $(this);
+    var orderpk = $this.data('orderpk');
+    swal({
+        title: "Are you sure?",
+        text: "Are you sure you want to cancel this order?",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#f0ad4e",
+        confirmButtonText: "Yes, cancel order",
+        closeOnConfirm: true,
+        allowOutsideClick: true 
+    },
+    function(){
+        $.ajax({
+          type: "POST",
+          url: "{% url 'dashboard:cancel-order-cancel' %}",
+          data: {'order': orderpk},
+          success: function(data) {
+            if (data['status'] == 'success')
+            {
+                $row = $orders_in_progress.find('tbody tr.order-' + orderpk);
+                $row.remove();
+            }
+            else
+            {
+                sweetAlert("Oops...", "Something went wrong!", "error");
+                return false;
+            }
+          },
+          error: function(data) {
+            sweetAlert("Oops...", "Something went wrong!", "error");
+            return true;
+          },
+        });
+    });
+});
 
+$(document).on('click', '.js-incoming-order-decline-btn', function(){
+    $this = $(this);
+    var orderpk = $this.data('orderpk');
+    swal({
+        title: "Are you sure?",
+        text: "Are you sure you want to decline this order?",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#f0ad4e",
+        confirmButtonText: "Yes, decline order",
+        closeOnConfirm: true,
+        allowOutsideClick: true 
+    },
+    function(){
+        $.ajax({
+          type: "POST",
+          url: "{% url 'dashboard:cancel-order-decline' %}",
+          data: {'order': orderpk},
+          success: function(data) {
+            if (data['status'] == 'success')
+            {
+                $row = $incoming_orders.find('tbody tr.order-' + orderpk);
+                $row.remove();
+            }
+            else
+            {
+                sweetAlert("Oops...", "Something went wrong!", "error");
+                return false;
+            }
+          },
+          error: function(data) {
+            sweetAlert("Oops...", "Something went wrong!", "error");
+            return true;
+          },
+        });
+    });
+});
+
+$(document).on('click', '.js-order-complete-btn', function(){
+    $this = $(this);
+    var orderpk = $this.data('orderpk');
+    $.ajax({
+      type: "POST",
+      url: "{% url 'dashboard:complete-order' %}",
+      data: {'order': orderpk},
+      success: function(data) {
+        if (data['status'] == 'success')
+        {
+            $row = $orders_in_progress.find('tbody tr.order-' + orderpk);
+            swal({
+                title: "Success!",
+                text: "Order completed.",
+                type: "success",
+                timer: 1000,
+            });
+            $row.remove();
+        }
+        else
+        {
+            console.log(data);
+            sweetAlert("Oops...", "Something went wrong!", "error");
+            return false;
+        }
+      },
+      error: function(data) {
+        console.log(data.responseText);
+        sweetAlert("Oops...", "Something went wrong!", "error");
+        return true;
+      },
+    });
 });
 
 </script>

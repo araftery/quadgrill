@@ -44,6 +44,7 @@ class Order(models.Model):
     time_estimate = models.IntegerField(null=True, blank=True)
     fulfilled = models.BooleanField(default=False)
     paid = models.BooleanField(default=False)
+    canceled = models.BooleanField(default=False)
 
     def add_item(self, item, quantity=1):
         try:
