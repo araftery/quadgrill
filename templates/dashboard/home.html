@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% load static %}
+
 
 {% block title %}
     Orders Dashboard
@@ -7,12 +9,26 @@
 {% block content %}
 
 <!-- handlebars template -->
-<script id="incoming_orders_cell" type="text/x-handlebars-template">
-<td class="text-center"><a href="#" class="choice-btn accept-btn"><i class="fa fa-check-circle"></i></a></td>
+<script id="incoming_order" type="text/x-handlebars-template">
+    {% verbatim %}
+    <tr class="{{ pk }}">
+        <td>{{ time }}</td>
+        <td>{{ customer_name }}</td>
+        <td>{{ payment_type }}</td>
+        <td>
+            <ul class="orderitem-list">
+                {{#each order_items}}
+                    <li>{{this}} x {{@key}}</li>
+                {{/each}}
+            </ul>
+        </td>
+        <td>${{ tip }}</td>
+        <td>${{ total }}</td>
+        <td class="text-center"><a href="#" class="choice-btn decline-btn js-incoming-order-decline-btn" data-orderpk="{{ pk }}"><i class="fa fa-times-circle"></i></a></td>
+        <td class="text-center"><a href="#" class="choice-btn accept-btn js-accept-modal-btn" data-orderpk="{{ pk }}"><i class="fa fa-check-circle"></i></a></td>
+    </tr>
+    {% endverbatim %}
 </script>
-
-
-
 
 <div class="row">
     <div class="col-md-8">
@@ -35,7 +51,7 @@
                     <tbody>
                     {% for order in orders_in_progress %}
                         <tr class="order-{{ order.pk }}">
-                            <td>{{ order.time|date:"d/m g:i a" }}</td>
+                            <td>{{ order.time|date:"m/d g:i a" }}</td>
                             <td>{{ order.customer.full_name }}</td>
                             <td>{{ order.payment_type }}</td>
                             <td><ul class="orderitem-list">{% for order_item in order.orderitem_set.all %}
@@ -72,7 +88,7 @@
                     <tbody>
                     {% for order in incoming_orders %}
                         <tr class="order-{{ order.pk }}">
-                            <td>{{ order.time|date:"d/m g:i a" }}</td>
+                            <td>{{ order.time|date:"m/d g:i a" }}</td>
                             <td>{{ order.customer.full_name }}</td>
                             <td>{{ order.payment_type }}</td>
                             <td><ul class="orderitem-list">{% for order_item in order.orderitem_set.all %}
@@ -295,6 +311,54 @@ $(document).on('click', '.js-order-complete-btn', function(){
       },
     });
 });
+
+var loaded = [{% for order in incoming_orders %}{{ order.pk }},{% endfor %}];
+var source   = $("#incoming_order").html();
+var template = Handlebars.compile(source);
+
+function add_order(order)
+{
+    loaded.push(order.pk);
+    context = {
+        'pk': order.pk,
+        'customer_name': order.customer_name,
+        'payment_type': order.payment_type,
+        'order_items': order.order_items,
+        'tip': order.tip,
+        'total': order.total,
+        'time': order.time,
+    }
+    html = template(context);
+    console.log(html);
+    $incoming_orders.find('tbody').append(html);
+}
+
+(function poll() {
+    setTimeout(function() {
+        var payload = {'loaded': JSON.stringify(loaded, null, 2)};
+        $.ajax({
+            url: "{% url 'dashboard:poll' %}",
+            data: payload,
+            method: 'POST',
+            success: function(data) {
+                var orders = data.orders;
+                if (orders)
+                {
+                    for (i in orders)
+                    {
+                        add_order(orders[i]);
+                    }
+                }
+                console.log(data);
+                poll();
+            }, 
+            error: function(data){
+                alert("Something's wrong! Please refresh.");
+            },
+            dataType: "json", 
+        });
+    }, 3000);
+})();
 
 </script>
 {% endblock content %}

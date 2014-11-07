@@ -5,7 +5,7 @@ from django.views.generic import ListView, View
 from braces.views import JSONResponseMixin
 
 from menu.models import Item
-from order.models import Order, OrderItem, Customer
+from order.models import Order, Customer
 from order.forms import OrderForm, OrderItemForm, CustomerForm
 
 
@@ -18,7 +18,7 @@ class SubmitOrder(JSONResponseMixin, View):
     def post(self, request):
         generic_error_response = self.render_json_response({'status': 'error', 'errors': {'non_field_errors': 'Invalid submission.'}})
         try:
-            data = json.loads(request.POST['data'])
+            data = json.loads(request.POST.get('data'))
             tip = data.get('tip')
             items = data.get('items')
             first_name = data.get('first_name')

@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, url
 
-from dashboard.views import OrdersDashboard, AcceptOrder, CancelOrder, CompleteOrder
+from dashboard.views import OrdersDashboard, AcceptOrder, CancelOrder, CompleteOrder, Poll
 
 
 urlpatterns = patterns(
@@ -10,4 +10,5 @@ urlpatterns = patterns(
     url(r'^cancel-order/cancel/$', CancelOrder.as_view(), {'cancel_type': 'cancel'}, name="cancel-order-cancel"),
     url(r'^cancel-order/decline/$', CancelOrder.as_view(), {'cancel_type': 'decline'}, name="cancel-order-decline"),
     url(r'^complete-order/$', CompleteOrder.as_view(), name="complete-order"),
+    url(r'^poll/$', Poll.as_view(), name="poll"),
 )

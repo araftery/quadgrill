@@ -1,0 +1,16 @@
+<tr class="{{ pk }}">
+    <td>{{ time }}</td>
+    <td>{{ customer_name }}</td>
+    <td>{{ payment_type }}</td>
+    <td>
+        <ul class="orderitem-list">
+            {{#each order_items}}
+                {{this}} x {{@key}}
+            {{/each}}
+        </ul>
+    </td>
+    <td>${{ tip }}</td>
+    <td>${{ total }}</td>
+    <td class="text-center"><a href="#" class="choice-btn decline-btn js-incoming-order-decline-btn" data-orderpk="{{ pk }}"><i class="fa fa-times-circle"></i></a></td>
+    <td class="text-center"><a href="#" class="choice-btn accept-btn js-accept-modal-btn" data-orderpk="{{ pk }}"><i class="fa fa-check-circle"></i></a></td>
+</tr>

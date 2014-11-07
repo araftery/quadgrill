@@ -1,3 +1,8 @@
+import datetime
+import json
+import pytz
+
+from django.conf import settings
 from django.views.generic import TemplateView, View
 from django.utils import timezone
 
@@ -90,3 +95,36 @@ class CompleteOrder(JSONResponseMixin, View):
         # TODO: send text logic here
 
         return self.render_json_response({'status': 'success'})
+
+
+class Poll(JSONResponseMixin, View):
+    def post(self, request):
+        generic_error_response = self.render_json_response({'status': 'error'})
+
+        try:
+            loaded = json.loads(request.POST.get('loaded'))
+        except ValueError:
+            return generic_error_response
+
+        if loaded is None:
+            return generic_error_response
+
+        orders = Order.objects.filter(accepted=False, fulfilled=False, canceled=False).exclude(pk__in=loaded).order_by('time')
+
+        payload = []
+        for order in orders:
+            order_items = {}
+            for order_item in order.orderitem_set.all():
+                order_items[order_item.item.name] = order_item.quantity
+
+            payload.append({
+                'pk': order.pk,
+                'payment_type': order.payment_type,
+                'time': order.time.strftime('%m/%d %I:%M %p'),
+                'customer_name': order.customer.full_name,
+                'tip': order.tip,
+                'total': order.total,
+                'order_items': order_items,
+            })
+
+        return self.render_json_response({'status': 'success', 'orders': payload})
