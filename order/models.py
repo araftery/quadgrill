@@ -42,9 +42,10 @@ class Order(models.Model):
     accepted = models.BooleanField(default=False)
     time_accepted = models.DateTimeField(null=True, blank=True)
     time_estimate = models.IntegerField(null=True, blank=True)
-    fulfilled = models.BooleanField(default=False)
+    completed = models.BooleanField(default=False)
     paid = models.BooleanField(default=False)
     canceled = models.BooleanField(default=False)
+    time_completed = models.DateTimeField(null=True, blank=True)
 
     def add_item(self, item, quantity=1):
         try:
@@ -60,6 +61,13 @@ class Order(models.Model):
         for order_item in self.orderitem_set.all():
             total += order_item.quantity * order_item.item.price
         return total
+
+    @property
+    def time_to_complete(self):
+        delta = (self.time_completed - self.time_accepted)
+        seconds = float(delta.seconds)
+        minutes = round(seconds/60, 0)
+        return '{} minutes'.format(int(minutes))
 
     def __unicode__(self):
         return u"{}'s order for ${} at {}".format(

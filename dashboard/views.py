@@ -16,8 +16,10 @@ class OrdersDashboard(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(OrdersDashboard, self).get_context_data(**kwargs)
-        context['orders_in_progress'] = Order.objects.filter(accepted=True, fulfilled=False, canceled=False).order_by('time')
-        context['incoming_orders'] = Order.objects.filter(accepted=False, fulfilled=False, canceled=False).order_by('time')
+        context['orders_in_progress'] = Order.objects.filter(accepted=True, completed=False, canceled=False).order_by('time')
+        context['incoming_orders'] = Order.objects.filter(accepted=False, completed=False, canceled=False).order_by('time')
+        fifteen_minutes_ago = timezone.now() - datetime.timedelta(seconds=60 * 15)
+        context['recently_completed_orders'] = Order.objects.filter(completed=True, time_completed__gte=fifteen_minutes_ago).order_by('-time_completed')[:10]
         return context
 
 
@@ -39,7 +41,7 @@ class AcceptOrder(JSONResponseMixin, View):
             return self.render_json_response({'status': 'error', 'errors': {'minutes_estimate': 'Invalid value.'}})
 
         try:
-            order = Order.objects.get(pk=order_pk, accepted=False, fulfilled=False, canceled=False)
+            order = Order.objects.get(pk=order_pk, accepted=False, completed=False, canceled=False)
         except Order.DoesNotExist:
             return generic_error_response
 
@@ -64,7 +66,7 @@ class CancelOrder(JSONResponseMixin, View):
             return generic_error_response
 
         try:
-            order = Order.objects.get(pk=order_pk, fulfilled=False, canceled=False)
+            order = Order.objects.get(pk=order_pk, completed=False, canceled=False)
         except Order.DoesNotExist:
             return generic_error_response
 
@@ -85,16 +87,17 @@ class CompleteOrder(JSONResponseMixin, View):
             return generic_error_response
 
         try:
-            order = Order.objects.get(pk=order_pk, accepted=True, fulfilled=False, canceled=False)
+            order = Order.objects.get(pk=order_pk, accepted=True, completed=False, canceled=False)
         except Order.DoesNotExist:
             return generic_error_response
 
-        order.fulfilled = True
+        order.completed = True
+        order.time_completed = timezone.now()
         order.save()
 
         # TODO: send text logic here
 
-        return self.render_json_response({'status': 'success'})
+        return self.render_json_response({'status': 'success', 'pk': order.pk, 'customer_name': order.customer.full_name, 'total': order.total, 'time_taken': order.time_to_complete})
 
 
 class Poll(JSONResponseMixin, View):
@@ -109,7 +112,7 @@ class Poll(JSONResponseMixin, View):
         if loaded is None:
             return generic_error_response
 
-        orders = Order.objects.filter(accepted=False, fulfilled=False, canceled=False).exclude(pk__in=loaded).order_by('time')
+        orders = Order.objects.filter(accepted=False, completed=False, canceled=False).exclude(pk__in=loaded).order_by('time')
 
         payload = []
         for order in orders:

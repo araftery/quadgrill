@@ -11,7 +11,7 @@
 <!-- handlebars template -->
 <script id="incoming_order" type="text/x-handlebars-template">
     {% verbatim %}
-    <tr class="{{ pk }}">
+    <tr class="order-{{ pk }}">
         <td>{{ time }}</td>
         <td>{{ customer_name }}</td>
         <td>{{ payment_type }}</td>
@@ -26,6 +26,17 @@
         <td>${{ total }}</td>
         <td class="text-center"><a href="#" class="choice-btn decline-btn js-incoming-order-decline-btn" data-orderpk="{{ pk }}"><i class="fa fa-times-circle"></i></a></td>
         <td class="text-center"><a href="#" class="choice-btn accept-btn js-accept-modal-btn" data-orderpk="{{ pk }}"><i class="fa fa-check-circle"></i></a></td>
+    </tr>
+    {% endverbatim %}
+</script>
+
+<!-- handlebars template -->
+<script id="recently_completed_order" type="text/x-handlebars-template">
+    {% verbatim %}
+    <tr class="order-{{ pk }}">
+        <td>{{ customer_name }}</td>
+        <td>${{ total }}</td>
+        <td>{{ time_taken }}</td>
     </tr>
     {% endverbatim %}
 </script>
@@ -109,6 +120,23 @@
 
     <div class="col-md-4">
         <h2>Recently Completed</h2>
+        <table class="table table-striped js-recently-completed">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Total</th>
+                    <th>Time to Complete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recently_completed_orders %}
+                    <tr>
+                        <td>{{ order.customer.full_name }}</td>
+                        <td>${{ order.total }}</td>
+                        <td>{{ order.time_to_complete }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
     </div><!-- /.col -->
 </div><!-- /.row -->
 
@@ -137,11 +165,13 @@
 </div>
 
 <script>
+
 $accept_modal = $('#accept_modal');
 $form_errors = $('.form-errors');
 $minutes_estimate = $('.js-minutes-estimate');
 $incoming_orders = $('.js-incoming-orders');
 $orders_in_progress = $('.js-orders-in-progress');
+$recently_completed_orders = $('.js-recently-completed');
 
 $(document).on('click', '.js-accept-modal-btn', function(){
     $this = $(this);
@@ -153,7 +183,7 @@ $(document).on('click', '.js-accept-modal-btn', function(){
 });
 
 $(document).on('click', '.js-accept-order-btn', function(){
-    $form_errors.html();
+    $form_errors.html('');
     var minutes_estimate = parseInt($minutes_estimate.val())
     var orderpk = $this.data('orderpk');
     if (!minutes_estimate)
@@ -278,6 +308,9 @@ $(document).on('click', '.js-incoming-order-decline-btn', function(){
     });
 });
 
+var recently_completed_source   = $("#recently_completed_order").html();
+var recently_completed_template = Handlebars.compile(recently_completed_source);
+
 $(document).on('click', '.js-order-complete-btn', function(){
     $this = $(this);
     var orderpk = $this.data('orderpk');
@@ -296,16 +329,25 @@ $(document).on('click', '.js-order-complete-btn', function(){
                 timer: 1000,
             });
             $row.remove();
+
+            context = {
+                'pk': data.pk,
+                'customer_name': data.customer_name,
+                'total': data.total,
+                'time_taken': data.time_taken,
+            }
+            html = recently_completed_template(context);
+            $recently_completed_orders.find('tbody').prepend(html);
+
+
         }
         else
         {
-            console.log(data);
             sweetAlert("Oops...", "Something went wrong!", "error");
             return false;
         }
       },
       error: function(data) {
-        console.log(data.responseText);
         sweetAlert("Oops...", "Something went wrong!", "error");
         return true;
       },
@@ -313,8 +355,8 @@ $(document).on('click', '.js-order-complete-btn', function(){
 });
 
 var loaded = [{% for order in incoming_orders %}{{ order.pk }},{% endfor %}];
-var source   = $("#incoming_order").html();
-var template = Handlebars.compile(source);
+var incoming_template_source   = $("#incoming_order").html();
+var incoming_order_template = Handlebars.compile(incoming_template_source);
 
 function add_order(order)
 {
@@ -328,8 +370,7 @@ function add_order(order)
         'total': order.total,
         'time': order.time,
     }
-    html = template(context);
-    console.log(html);
+    html = incoming_order_template(context);
     $incoming_orders.find('tbody').append(html);
 }
 
@@ -349,7 +390,6 @@ function add_order(order)
                         add_order(orders[i]);
                     }
                 }
-                console.log(data);
                 poll();
             }, 
             error: function(data){
