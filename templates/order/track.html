@@ -58,8 +58,8 @@
         <table class="tracker-graphic">
             <tr>
                 <td class="active"><strong>Received</strong></td>
-                <td{% if order.accepted %} class="active"{% endif %}><strong>In Progress</strong></td>
-                <td{% if order.completed %} class="active"{% endif %}><strong>Complete</strong></td>
+                <td{% if order.accepted %} class="active"{% elif order.canceled %} class="red"{% endif %}><strong>{% if not order.accepted and order.canceled %}Declined{% else %}In Progress{% endif %}</strong></td>
+                <td{% if order.completed %} class="active"{% elif order.accepted and order.canceled %} class="red"{% endif %}><strong>{% if order.accepted and order.canceled %}Canceled{% else %}Complete{% endif %}</strong></td>
             </tr>
         </table>
     </div>
@@ -85,6 +85,12 @@
 {
     color: white;
     background: #2ecc71;
+}
+
+.tracker-graphic td.red
+{
+    color: white;
+    background: #e74c3c;
 }
 </style>
 {% endblock content %}

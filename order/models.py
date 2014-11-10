@@ -62,6 +62,10 @@ class Order(models.Model):
     def status(self):
         if self.completed:
             return 'Complete'
+        elif self.accepted and self.canceled:
+            return 'Canceled'
+        elif self.canceled:
+            return 'Declined'
         elif self.accepted:
             return 'In Progress'
         else:
@@ -76,7 +80,7 @@ class Order(models.Model):
 
     @property
     def eta(self):
-        if self.time_estimate:
+        if self.time_estimate and not self.canceled:
             return self.time_accepted + datetime.timedelta(seconds=60 * self.time_estimate)
         return None
 

@@ -148,6 +148,7 @@
     </div><!-- /.col -->
 </div><!-- /.row -->
 
+
 <!-- post-accept modal -->
 <div class="modal fade" id="accept_modal" tabindex="-1" role="dialog" aria-labelledby="accept_modal_label" aria-hidden="true">
   <div class="modal-dialog">
@@ -156,27 +157,37 @@
         <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
         <h4 class="modal-title" id="accept_modal_label">How long will this order take?</h4>
       </div>
-      <form role="form">
+
+
         <div class="modal-body">
-        <div class="form-errors"></div>
-          <div class="form-group">
-            <input type="text" class="form-control js-minutes-estimate" name="estimate" required="required" placeholder="Number of minutes...">
+          <div>
+            <a href="#" class="btn btn-primary js-minutes-btn" data-minutes="2">2</a> <a href="#" class="btn btn-primary js-minutes-btn" data-minutes="5">5</a> <a href="#" class="btn btn-primary js-minutes-btn" data-minutes="10">10</a> <a href="#" class="btn btn-primary js-minutes-btn" data-minutes="15">15</a> <a href="#" class="btn btn-primary js-minutes-btn" data-minutes="20">20</a> <a href="#" class="btn btn-primary js-minutes-btn" data-minutes="25">25</a> <a href="#" class="btn btn-primary js-minutes-btn" data-minutes="30">30</a>
           </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-        <button type="submit" class="btn btn-primary js-accept-order-btn" data-orderpk="">Accept</button>
-    </form>
+          <div>
+            
+            <div class="input-group other-field">
+              <input type="number" class="form-control" placeholder="Other # of minutes...">
+              <span class="input-group-btn">
+                <button class="btn btn-primary js-minutes-other-btn" type="button">Other</button>
+              </span>
+            </div><!-- /input-group -->
+          </div>
+
+
+          <div class="form-errors"></div>
+
+        </div>
+
       </div>
     </div>
   </div>
-</div>
 
 <script>
 
 $accept_modal = $('#accept_modal');
 $form_errors = $('.form-errors');
-$minutes_estimate = $('.js-minutes-estimate');
+$minutes_other = $('.other-field input');
+$minutes_other_btn = $('.js-minutes-other-btn');
 $incoming_orders = $('.js-incoming-orders');
 $orders_in_progress = $('.js-orders-in-progress');
 $recently_completed_orders = $('.js-recently-completed');
@@ -184,15 +195,15 @@ $recently_completed_orders = $('.js-recently-completed');
 $(document).on('click', '.js-accept-modal-btn', function(){
     $this = $(this);
     var orderpk = $this.data('orderpk');
-    $('.js-accept-order-btn').data('orderpk', orderpk);
+    $minutes_other_btn.data('orderpk', orderpk);
     $form_errors.html();
     $accept_modal.modal('show');
     return false;
 });
 
-$(document).on('click', '.js-accept-order-btn', function(){
+$(document).on('click', '.js-minutes-other-btn', function(){
     $form_errors.html('');
-    var minutes_estimate = parseInt($minutes_estimate.val())
+    var minutes_estimate = parseInt($minutes_other.val())
     var orderpk = $this.data('orderpk');
     if (!minutes_estimate)
     {
@@ -200,7 +211,25 @@ $(document).on('click', '.js-accept-order-btn', function(){
         return false;
     }
 
+    acceptOrder(orderpk, minutes_estimate);
+});
+
+$(document).on('click', '.js-minutes-btn', function(){
     $this = $(this);
+    $form_errors.html('');
+    var minutes_estimate = parseInt($this.data('minutes'))
+    var orderpk = $minutes_other_btn.data('orderpk');
+    if (!minutes_estimate)
+    {
+        $form_errors.html('<p class="alert alert-danger">A positive integer is required.</p>');
+        return false;
+    }
+
+    acceptOrder(orderpk, minutes_estimate);
+});
+
+function acceptOrder(orderpk, minutes_estimate)
+{
     $.ajax({
       type: "POST",
       url: "{% url 'dashboard:accept-order' %}",
@@ -213,6 +242,7 @@ $(document).on('click', '.js-accept-order-btn', function(){
             $row.find('.js-incoming-order-decline-btn').removeClass('js-incoming-order-decline-btn').addClass('js-accepted-order-cancel-btn');
             $orders_in_progress.append($row);
 
+            $minutes_other.val('');
             $accept_modal.modal('hide');
             return true;
         }
@@ -227,6 +257,7 @@ $(document).on('click', '.js-accept-order-btn', function(){
             {
                 $accept_modal.modal('hide');
                 sweetAlert("Oops...", "Something went wrong!", "error");
+                console.log(data);
                 return false;
             }
         }
@@ -238,7 +269,7 @@ $(document).on('click', '.js-accept-order-btn', function(){
       },
     });
     return false;
-});
+}
 
 $(document).on('click', '.js-accepted-order-cancel-btn', function(){
     $this = $(this);
@@ -401,7 +432,7 @@ function add_order(order)
                 poll();
             }, 
             error: function(data){
-                alert("Something's wrong! Please refresh.");
+                sweetAlert("Oops...", "Something's wrong! Please refresh.", "error");
             },
             dataType: "json", 
         });
@@ -409,4 +440,20 @@ function add_order(order)
 })();
 
 </script>
+
+<style>
+.minutes-btns
+{
+    margin-bottom:15px;
+}
+
+.other-field
+{
+    margin-top:10px;
+}
+
+
+
+
+</style>
 {% endblock content %}
