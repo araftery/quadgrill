@@ -1,3 +1,5 @@
+import datetime
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
@@ -46,6 +48,7 @@ class Order(models.Model):
     paid = models.BooleanField(default=False)
     canceled = models.BooleanField(default=False)
     time_completed = models.DateTimeField(null=True, blank=True)
+    key = models.CharField(max_length=64, null=True, blank=True)
 
     def add_item(self, item, quantity=1):
         try:
@@ -56,11 +59,26 @@ class Order(models.Model):
             OrderItem.objects.create(item=item, quantity=quantity, order=self)
 
     @property
+    def status(self):
+        if self.completed:
+            return 'Complete'
+        elif self.accepted:
+            return 'In Progress'
+        else:
+            return 'In Queue'
+
+    @property
     def total(self):
         total = self.tip
         for order_item in self.orderitem_set.all():
             total += order_item.quantity * order_item.item.price
         return total
+
+    @property
+    def eta(self):
+        if self.time_estimate:
+            return self.time_accepted + datetime.timedelta(seconds=60 * self.time_estimate)
+        return None
 
     @property
     def time_to_complete(self):

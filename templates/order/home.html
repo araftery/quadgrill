@@ -49,6 +49,10 @@
             </tbody>
         </table>
         <div class="extras hidden">
+        <form method="POST" id="order_form" action="/order/submit/">
+            {% csrf_token %}
+            <input type="hidden" name="data" class="js-data" value="">
+        </form>
             <div class="line-wrapper">
                 <strong>Subtotal: </strong><span class="subtotal">$0.00</span>
             </div>
@@ -83,6 +87,8 @@
 <script>
 var $order_table = $('.js-order-table');
 var items_in_order = [];
+var $order_form = $('#order_form');
+
 $('.js-add-item').on('click', function(){
     var $this = $(this);
     var pk = $this.data('pk');
@@ -107,6 +113,7 @@ $('.js-add-item').on('click', function(){
     }
     $('.extras').removeClass('hidden');
     updateSubtotal();
+    return false;
 });
 
 $('.js-order-table').on('click', '.js-remove-item', function(){
@@ -118,6 +125,8 @@ $('.js-order-table').on('click', '.js-remove-item', function(){
     {  
         $('.extras').addClass('hidden');
     }
+
+    return false;
 });
 
 $('#order_submit_btn').on('click', function(){
@@ -146,6 +155,12 @@ $('#order_submit_btn').on('click', function(){
         'phone_number': phone_number,
         'items': items,
     };
+
+    /*
+    $order_form.find('.js-data').val(JSON.stringify(data, null, 2));
+    $order_form.submit();
+    return false;
+    */
     $.ajax({
       type: "POST",
       url: '/order/submit/',
@@ -154,10 +169,12 @@ $('#order_submit_btn').on('click', function(){
         if (data['status'] == 'success')
         {
             sweetAlert("Success!", "Your order has been submitted! You should receive a text shortly confirming your order's status.", "success");
+            window.setTimeout(function(){
+                window.location.href = "/order/track/" + data['key'] + "/";
+            }, 2000);
         }
         else
         {
-            console.log(data);
             sweetAlert("Oops...", "Something went wrong!", "error");
         }
       },
@@ -165,6 +182,8 @@ $('#order_submit_btn').on('click', function(){
         sweetAlert("Oops...", "Something went wrong!", "error");
       },
     });
+
+    return false;
 });
 
 function calculateSubtotal()
@@ -209,6 +228,7 @@ $('.tip-btns a').on('click', function(){
     var tip = (percentage * subtotal).toFixed(2);
     $('#js-tip').val(tip);
     updateTotal();
+    return false;
 });
 
 $(document).on('change', '.js-quantity', updateSubtotal);
@@ -221,4 +241,5 @@ $(document).on('change', '#js-tip', updateTotal);
 {
     margin-bottom:10px;
 }
+</style>
 {% endblock content %}

@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Track Your Order
+{% endblock title %}
+
+{% block content %}
+<h2>Track Your Order</h2>
+<div class="row">
+    <div class="col-md-12">
+        <table class="table table-striped">
+            <tr>
+                <th>Order Number</th>
+                <td>{{ order.pk }}</td>
+            </tr>
+            <tr>
+                <th>Name</th>
+                <td>{{ order.customer.full_name }}</td>
+            </tr>
+            <tr>
+                <th>Phone</th>
+                <td>{{ order.customer.phone }}</td>
+            </tr>
+            <tr>
+                <th>Order Time</th>
+                <td>{{ order.time|date:"m/d/y g:i a" }}</td>
+            </tr>
+            <tr>
+                <th>Payment Type</th>
+                <td>{{ order.payment_type }}</td>
+            </tr>
+            <tr>
+                {% if not order.completed %}
+                    <th>ETA</th>
+                {% else %}
+                    <th>Time Completed</th>
+                {% endif %}
+                {% if not order.completed %}
+                    <td>{{ order.eta|date:"m/d/y g:i a" }}</td>
+                {% else %}
+                    <td>{{ order.time_completed|date:"m/d/y g:i a" }}</td>
+                {% endif %}
+            </tr>
+            <tr>
+                <th>Total</th>
+                <td>${{ order.total }}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td>{{ order.status }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <table class="tracker-graphic">
+            <tr>
+                <td class="active"><strong>Received</strong></td>
+                <td{% if order.accepted %} class="active"{% endif %}><strong>In Progress</strong></td>
+                <td{% if order.completed %} class="active"{% endif %}><strong>Complete</strong></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<style>
+.tracker-graphic
+{
+    width:100%;
+    height:50px;
+}
+
+.tracker-graphic td
+{
+    text-align:center;
+    border:1px solid #ccc;
+    color: black;
+    width:33.33%;
+    background:#f9f9f9;
+}
+
+.tracker-graphic td.active
+{
+    color: white;
+    background: #2ecc71;
+}
+</style>
+{% endblock content %}

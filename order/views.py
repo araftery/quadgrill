@@ -1,6 +1,9 @@
+import hashlib
 import json
 
 from django.views.generic import ListView, View
+from django.http import Http404
+from django.shortcuts import render
 
 from braces.views import JSONResponseMixin
 
@@ -76,7 +79,23 @@ class SubmitOrder(JSONResponseMixin, View):
             tip=tip,
         )
 
+        m = hashlib.md5()
+        m.update('{}{}'.format(order.customer.last_name, order.pk))
+        key = m.hexdigest()
+        order.key = key
+        order.save()
+
         for item, quantity in order_items:
             order.add_item(item, quantity)
 
-        return self.render_json_response({'status': 'success'})
+        return self.render_json_response({'status': 'success', 'key': order.key})
+
+
+class TrackOrder(View):
+    def get(self, request, key):
+        try:
+            order = Order.objects.get(key=key)
+        except Order.DoesNotExist:
+            raise Http404
+
+        return render(request, 'order/track.html', {'order': order})
