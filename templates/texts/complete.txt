@@ -1,0 +1,3 @@
+{% autoescape off %}
+    Your order #{{ order.number }} is ready for pick up. -QG
+{% endautoescape %}

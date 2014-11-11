@@ -265,6 +265,7 @@ function acceptOrder(orderpk, minutes_estimate)
       error: function(data) {
         $accept_modal.modal('hide');
         sweetAlert("Oops...", "Something went wrong!", "error");
+        console.log(data);
         return true;
       },
     });
@@ -303,6 +304,7 @@ $(document).on('click', '.js-accepted-order-cancel-btn', function(){
           },
           error: function(data) {
             sweetAlert("Oops...", "Something went wrong!", "error");
+            console.log(data);
             return true;
           },
         });
@@ -341,6 +343,7 @@ $(document).on('click', '.js-incoming-order-decline-btn', function(){
           },
           error: function(data) {
             sweetAlert("Oops...", "Something went wrong!", "error");
+            console.log(data);
             return true;
           },
         });

@@ -1,12 +1,11 @@
 import datetime
 import json
-import pytz
 
-from django.conf import settings
 from django.views.generic import TemplateView, View
 from django.utils import timezone
 
 from braces.views import JSONResponseMixin
+from core.utils import send_text
 
 from order.models import Order
 
@@ -50,7 +49,7 @@ class AcceptOrder(JSONResponseMixin, View):
         order.time_accepted = timezone.now()
         order.save()
 
-        # TODO: send text logic here
+        send_text('accepted', unicode(order.customer.phone), {'order': order})
 
         return self.render_json_response({'status': 'success'})
 
@@ -59,7 +58,7 @@ class CancelOrder(JSONResponseMixin, View):
     def post(self, request, **kwargs):
         generic_error_response = self.render_json_response({'status': 'error', 'errors': {'non_field_errors': 'Invalid submission.'}})
 
-        cancel_type = kwargs.get('cancel_type')
+        cancel_verb = kwargs.get('cancel_verb')
 
         order_pk = request.POST.get('order')
         if order_pk is None:
@@ -73,7 +72,7 @@ class CancelOrder(JSONResponseMixin, View):
         order.canceled = True
         order.save()
 
-        # TODO: send text logic here
+        send_text('cancel', unicode(order.customer.phone), {'order': order, 'verb': cancel_verb})
 
         return self.render_json_response({'status': 'success'})
 
@@ -95,7 +94,7 @@ class CompleteOrder(JSONResponseMixin, View):
         order.time_completed = timezone.now()
         order.save()
 
-        # TODO: send text logic here
+        send_text('complete', unicode(order.customer.phone), {'order': order})
 
         return self.render_json_response({'status': 'success', 'pk': order.pk, 'customer_name': order.customer.full_name, 'total': order.total, 'time_taken': order.time_to_complete})
 

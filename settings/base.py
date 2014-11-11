@@ -34,6 +34,7 @@ DEFAULT_APPS = (
 
 THIRD_PARTY_APPS = (
     'crispy_forms',
+    'djcelery',
 )
 
 MY_APPS = (
@@ -137,11 +138,30 @@ USE_TZ = True
 SITE_ID = 1
 
 ############################################################
-##### CRISPY FORMS  ########################################
+##### CRISPY FORMS #########################################
 ############################################################
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
 
+
 ############################################################
-##### PROJECT-SPECIFIC #####################################
+##### TWILIO ###############################################
 ############################################################
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
+
+
+############################################################
+##### CELERY ###############################################
+############################################################
+
+CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
+BROKER_URL = "amqp://quadgrill:quadgrill@localhost:5672/quadgrill"
+CELERY_RESULT_DBURI = "postgresql://quadgrill:password@localhost/quadgrill"
+CELERY_ENABLE_UTC = True
+CELERY_TIMEZONE = TIME_ZONE
+
+# put these two lines at the very bottom of the settings file
+import djcelery
+djcelery.setup_loader()

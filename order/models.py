@@ -91,6 +91,10 @@ class Order(models.Model):
         minutes = round(seconds/60, 0)
         return '{} minutes'.format(int(minutes))
 
+    @property
+    def number(self):
+        return self.pk
+
     def __unicode__(self):
         return u"{}'s order for ${} at {}".format(
             self.customer.full_name,

@@ -23,4 +23,4 @@ DATABASES = {
 DEBUG = True
 TEMPLATE_DEBUG = True
 
-SETTINGS_MOUDLE = 'quadgrill.settings.dev'
+SETTINGS_MODULE = 'settings.dev'
