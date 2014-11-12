@@ -53,6 +53,7 @@
             {% csrf_token %}
             <input type="hidden" name="data" class="js-data" value="">
         </form>
+        <form id="order_form_display">
             <div class="line-wrapper">
                 <strong>Subtotal: </strong><span class="subtotal">$0.00</span>
             </div>
@@ -68,19 +69,20 @@
             </div>
             <div class="form-group">
                 <label for="js-first">First Name:</label>
-                <input type="text" id="js-first" placeholder="First Name...">
+                <input type="text" class="form-control" id="js-first" name="first" placeholder="First Name..." required>
             </div>
             <div class="form-group">
                 <label for="js-last">Last Name:</label>
-                <input type="text" id="js-last" placeholder="Last Name...">
+                <input type="text" class="form-control" id="js-last" name="last" placeholder="Last Name..."  required>
             </div>
             <div class="form-group">
                 <label for="js-phone">Phone Number:</label>
-                <input type="text" id="js-phone" placeholder="Phone Number...">
+                <input type="text" class="form-control" id="js-phone" name="phone" placeholder="Phone Number..." required>
             </div>
             <div class="form-group">
-                <button class="btn btn-primary" id="order_submit_btn">Submit Order</button>
+                <button class="btn btn-primary" type="submit" id="order_submit_btn">Submit Order</button>
             </div>
+        </form>
         </div>
     </div>
 </div>
@@ -88,6 +90,46 @@
 var $order_table = $('.js-order-table');
 var items_in_order = [];
 var $order_form = $('#order_form');
+
+$(document).ready(function() {
+    $('#order_form_display').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            first: {
+                message: 'First name is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'First name is required and cannot be empty'
+                    },
+                }
+            },
+            last: {
+                message: 'Last name is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'Last name is required and cannot be empty'
+                    },
+                }
+            },
+            phone: {
+                validators: {
+                    notEmpty: {
+                        message: 'Phone number is required and cannot be empty'
+                    },
+                    phone: {
+                        message: 'The input is not a valid phone number',
+                        country: 'US',
+                    }
+                }
+            }
+        }
+    });
+});
 
 $('.js-add-item').on('click', function(){
     var $this = $(this);
