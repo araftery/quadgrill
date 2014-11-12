@@ -5,6 +5,8 @@ from django.db import models
 
 from phonenumber_field.modelfields import PhoneNumberField
 
+from core.utils import shorten_url
+
 
 class Customer(models.Model):
     first_name = models.CharField(max_length=100)
@@ -94,6 +96,10 @@ class Order(models.Model):
     @property
     def number(self):
         return self.pk
+
+    def get_short_tracking_url(self):
+        return shorten_url('order:track', key=self.key)
+
 
     def __unicode__(self):
         return u"{}'s order for ${} at {}".format(
