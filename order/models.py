@@ -51,6 +51,7 @@ class Order(models.Model):
     canceled = models.BooleanField(default=False)
     time_completed = models.DateTimeField(null=True, blank=True)
     key = models.CharField(max_length=64, null=True, blank=True)
+    cancellation_reason = models.CharField(max_length=500, null=True, blank=True)
 
     def add_item(self, item, quantity=1):
         try:
