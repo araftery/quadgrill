@@ -90,9 +90,10 @@
 var $order_table = $('.js-order-table');
 var items_in_order = [];
 var $order_form = $('#order_form');
+var $order_form_display = $('#order_form_display');
 
 $(document).ready(function() {
-    $('#order_form_display').bootstrapValidator({
+    $order_form_display.bootstrapValidator({
         message: 'This value is not valid',
         feedbackIcons: {
             valid: 'glyphicon glyphicon-ok',
@@ -171,7 +172,13 @@ $('.js-order-table').on('click', '.js-remove-item', function(){
     return false;
 });
 
-$('#order_submit_btn').on('click', function(){
+function submit_order_form() {
+    $order_form_display.data('bootstrapValidator').validate();
+    if (!$order_form_display.data('bootstrapValidator').isValid())
+    {
+        return false;
+
+    }
     var items = {};
     $('.js-order-table tbody tr').each(function(){
         $row = $(this);
@@ -224,7 +231,23 @@ $('#order_submit_btn').on('click', function(){
         sweetAlert("Oops...", "Something went wrong!", "error");
       },
     });
+}
+$order_form_display.find('input').keypress(function(e) {
+if (e.which == '13') {
+        e.preventDefault();
+        submit_order_form();
+        return false;
+   }
+});
 
+$('#order_submit_btn').on('click', function(e){
+    e.preventDefault();
+    submit_order_form();
+    return false;
+});
+
+$order_form_display.on('submit', function(e){
+    e.preventDefault();
     return false;
 });
 
