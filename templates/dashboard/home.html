@@ -182,9 +182,47 @@
     </div>
   </div>
 
+
+
+<!-- post-accept modal -->
+<div class="modal fade" id="cancel_modal" tabindex="-1" role="dialog" aria-labelledby="cancel_modal_label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="cancel_modal_label">Reason for cancellation:</h4>
+      </div>
+
+
+        <div class="modal-body">
+
+
+
+        <form role="form">
+            <div class="form-group">
+                <label for="reasonForCancellation">Reason for cancellation:</label>
+                <textarea class="js-cancellation-reason form-control cancellation-reason-field" id="reasonForCancellation" placeholder="Optional..."></textarea>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-danger js-cancellation-send-btn" type="button">Cancel Order</button>
+            </div>
+        
+        </form>
+
+
+          <div class="form-errors"></div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 <script>
 
 $accept_modal = $('#accept_modal');
+$cancel_modal = $('#cancel_modal');
+$cancellation_message = $('.js-cancellation-reason');
 $form_errors = $('.form-errors');
 $minutes_other = $('.other-field input');
 $minutes_other_btn = $('.js-minutes-other-btn');
@@ -203,7 +241,7 @@ $(document).on('click', '.js-accept-modal-btn', function(){
 
 $(document).on('click', '.js-minutes-other-btn', function(){
     $form_errors.html('');
-    var minutes_estimate = parseInt($minutes_other.val())
+    var minutes_estimate = parseInt($minutes_other.val());
     var orderpk = $this.data('orderpk');
     if (!minutes_estimate)
     {
@@ -217,7 +255,7 @@ $(document).on('click', '.js-minutes-other-btn', function(){
 $(document).on('click', '.js-minutes-btn', function(){
     $this = $(this);
     $form_errors.html('');
-    var minutes_estimate = parseInt($this.data('minutes'))
+    var minutes_estimate = parseInt($this.data('minutes'));
     var orderpk = $minutes_other_btn.data('orderpk');
     if (!minutes_estimate)
     {
@@ -285,29 +323,14 @@ $(document).on('click', '.js-accepted-order-cancel-btn', function(){
         closeOnConfirm: true,
         allowOutsideClick: true 
     },
-    function(){
-        $.ajax({
-          type: "POST",
-          url: "{% url 'dashboard:cancel-order-cancel' %}",
-          data: {'order': orderpk},
-          success: function(data) {
-            if (data['status'] == 'success')
-            {
-                $row = $orders_in_progress.find('tbody tr.order-' + orderpk);
-                $row.remove();
-            }
-            else
-            {
-                sweetAlert("Oops...", "Something went wrong!", "error");
-                return false;
-            }
-          },
-          error: function(data) {
-            sweetAlert("Oops...", "Something went wrong!", "error");
-            console.log(data);
-            return true;
-          },
-        });
+    function(isConfirm){   
+        if (isConfirm)
+        {
+            $cancel_modal.find('.js-cancellation-send-btn').data('cancellation-type', 'cancel');
+            $cancel_modal.find('.js-cancellation-send-btn').data('cancellation-orderpk', orderpk);
+            $cancellation_message.html('');
+            $cancel_modal.modal('show');
+        }
     });
 });
 
@@ -324,31 +347,62 @@ $(document).on('click', '.js-incoming-order-decline-btn', function(){
         closeOnConfirm: true,
         allowOutsideClick: true 
     },
-    function(){
-        $.ajax({
-          type: "POST",
-          url: "{% url 'dashboard:cancel-order-decline' %}",
-          data: {'order': orderpk},
-          success: function(data) {
-            if (data['status'] == 'success')
-            {
-                $row = $incoming_orders.find('tbody tr.order-' + orderpk);
-                $row.remove();
-            }
-            else
-            {
-                sweetAlert("Oops...", "Something went wrong!", "error");
-                return false;
-            }
-          },
-          error: function(data) {
-            sweetAlert("Oops...", "Something went wrong!", "error");
-            console.log(data);
-            return true;
-          },
-        });
+    function(isConfirm){   
+        if (isConfirm) {
+            $cancel_modal.find('.js-cancellation-send-btn').data('cancellation-type', 'decline');
+            $cancel_modal.find('.js-cancellation-send-btn').data('cancellation-orderpk', orderpk);
+            $cancellation_message.html();
+            $cancel_modal.modal('show');
+        }
     });
 });
+
+$('.js-cancellation-send-btn').on('click', function(e){
+    e.preventDefault();
+    var cancel_url = "{% url 'dashboard:cancel-order-cancel' %}";
+    var decline_url = "{% url 'dashboard:cancel-order-decline' %}";
+    $this = $(this);
+    var type = $this.data('cancellation-type');
+    var orderpk = $this.data('cancellation-orderpk');
+    var url = (type == 'cancel') ? cancel_url : decline_url;
+    var success = false;
+    $.ajax({
+        type: "POST",
+        url: url,
+        data: {'order': orderpk, 'cancellation_reason': $cancellation_message.val()},
+        success: function(data) {
+          if (data['status'] == 'success')
+          {
+              $cancel_modal.modal('hide');
+                if (type == 'cancel')
+                {
+                    $orders_in_progress.find('tbody tr.order-' + orderpk).remove();
+                }
+                else
+                {
+                    $incoming_orders.find('tbody tr.order-' + orderpk).remove();
+                }
+          }
+          else
+          {
+            $cancel_modal.modal('hide');
+              sweetAlert("Oops...", "Something went wrong!", "error");
+              return false;
+          }
+        },
+        error: function(data) {
+            $cancel_modal.modal('hide');
+          sweetAlert("Oops...", "Something went wrong!", "error");
+          console.log(data);
+          return true;
+        },
+    });
+
+    return false;
+
+});
+
+
 
 var recently_completed_source   = $("#recently_completed_order").html();
 var recently_completed_template = Handlebars.compile(recently_completed_source);
@@ -377,7 +431,7 @@ $(document).on('click', '.js-order-complete-btn', function(){
                 'customer_name': data.customer_name,
                 'total': data.total,
                 'time_taken': data.time_taken,
-            }
+            };
             html = recently_completed_template(context);
             $recently_completed_orders.find('tbody').prepend(html);
 
@@ -411,7 +465,7 @@ function add_order(order)
         'tip': order.tip,
         'total': order.total,
         'time': order.time,
-    }
+    };
     html = incoming_order_template(context);
     $incoming_orders.find('tbody').append(html);
 }
@@ -427,7 +481,7 @@ function add_order(order)
                 var orders = data.orders;
                 if (orders)
                 {
-                    for (i in orders)
+                    for (var i in orders)
                     {
                         add_order(orders[i]);
                     }
@@ -454,9 +508,6 @@ function add_order(order)
 {
     margin-top:10px;
 }
-
-
-
 
 </style>
 {% endblock content %}

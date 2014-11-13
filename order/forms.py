@@ -7,6 +7,10 @@ class OrderForm(forms.Form):
     tip = forms.DecimalField(max_digits=6, decimal_places=2, required=True)
 
 
+class CancellationReasonForm(forms.Form):
+    cancellation_reason = forms.CharField(max_length=500, required=False)
+
+
 class OrderItemForm(forms.ModelForm):
 
     class Meta:
