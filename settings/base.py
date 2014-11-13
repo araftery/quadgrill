@@ -35,6 +35,7 @@ DEFAULT_APPS = (
 THIRD_PARTY_APPS = (
     'crispy_forms',
     'djcelery',
+    'djrill',
 )
 
 MY_APPS = (
@@ -59,6 +60,7 @@ DEFAULT_MIDDLEWARE = (
 )
 
 THIRD_PARTY_MIDDLEWARE = (
+    'bugsnag.django.middleware.BugsnagMiddleware',
 )
 
 MIDDLEWARE_CLASSES = DEFAULT_MIDDLEWARE + THIRD_PARTY_MIDDLEWARE
@@ -102,13 +104,14 @@ URL_PATH = ''
 ##### EMAIL ################################################
 ############################################################
 
-# MANDRILL_USER = os.environ.get('MANDRILL_USER')
-# MANDRILL_API_KEY = os.environ.get('MANDRILL_API_KEY')
-# EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"
+MANDRILL_USER = os.environ.get('MANDRILL_USER')
+MANDRILL_API_KEY = os.environ.get('MANDRILL_API_KEY')
+EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"
+SERVER_EMAIL = "quadgrill@quadgrill.com"
 
-# ADMINS = (
-#    ('Andrew Raftery', 'andrewraftery@gmail.com'),
-# )
+ADMINS = (
+    ('Andrew Raftery', 'andrewraftery@gmail.com'),
+)
 
 ############################################################
 ##### STATIC FILES #########################################
@@ -137,6 +140,11 @@ TIME_ZONE = 'America/New_York'
 USE_TZ = True
 SITE_ID = 1
 
+BUGSNAG = {
+  "api_key": os.environ.get('BUGSNAG_API_KEY'),
+  "project_root": "/app",
+}
+
 ############################################################
 ##### CRISPY FORMS #########################################
 ############################################################
@@ -156,11 +164,11 @@ TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
 ##### CELERY ###############################################
 ############################################################
 
-CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
-BROKER_URL = "amqp://quadgrill:quadgrill@localhost:5672/quadgrill"
-CELERY_RESULT_DBURI = "postgresql://quadgrill:password@localhost/quadgrill"
 CELERY_ENABLE_UTC = True
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
+BROKER_URL = os.environ.get('CLOUDAMQP_URL')
+CELERY_RESULT_DBURI = os.environ.get('DATABASE_URL')
 
 # put these two lines at the very bottom of the settings file
 import djcelery

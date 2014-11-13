@@ -80,6 +80,10 @@
                 <input type="text" class="form-control" id="js-phone" name="phone" placeholder="Phone Number..." required>
             </div>
             <div class="form-group">
+                <label for="js-cc">Crimson Cash Number:</label>
+                <input type="text" class="form-control" id="js-cc" name="crimsoncash" placeholder="60641101..." required>
+            </div>
+            <div class="form-group">
                 <button class="btn btn-primary" type="submit" id="order_submit_btn">Submit Order</button>
             </div>
         </form>
@@ -127,7 +131,18 @@ $(document).ready(function() {
                         country: 'US',
                     }
                 }
-            }
+            },
+            crimsoncash: {
+                message: 'Crimson Cash number is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'Crimson Cash number is required and cannot be empty'
+                    },
+                    digits: {
+                        message: 'Crimson Cash numbers can contain only digits'
+                    },
+                }
+            },
         }
     });
 });
@@ -196,6 +211,7 @@ function submit_order_form() {
     var first_name = $('#js-first').val();
     var last_name = $('#js-last').val();
     var phone_number = $('#js-phone').val();
+    var crimsoncash = $('#js-cc').val();
 
     var data = {
         'tip': tip,
@@ -203,6 +219,7 @@ function submit_order_form() {
         'last_name': last_name,
         'phone_number': phone_number,
         'items': items,
+        'crimsoncash': crimsoncash,
     };
 
     /*

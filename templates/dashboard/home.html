@@ -68,7 +68,7 @@
                             <td>{{ order.pk }}</td>
                             <td>{{ order.time|date:"m/d g:i a" }}</td>
                             <td>{{ order.customer.full_name }}</td>
-                            <td>{{ order.payment_type }}</td>
+                            <td>{{ order.payment_type_display }}</td>
                             <td><ul class="orderitem-list">{% for order_item in order.orderitem_set.all %}
                                 <li>{{ order_item.quantity }} x {{ order_item.item.name }}</li>
                             {% endfor %}
@@ -107,7 +107,7 @@
                             <td>{{ order.pk }}
                             <td>{{ order.time|date:"m/d g:i a" }}</td>
                             <td>{{ order.customer.full_name }}</td>
-                            <td>{{ order.payment_type }}</td>
+                            <td>{{ order.payment_type_display }}</td>
                             <td><ul class="orderitem-list">{% for order_item in order.orderitem_set.all %}
                                 <li>{{ order_item.quantity }} x {{ order_item.item.name }}</li>
                             {% endfor %}
@@ -239,7 +239,8 @@ $(document).on('click', '.js-accept-modal-btn', function(){
     return false;
 });
 
-$(document).on('click', '.js-minutes-other-btn', function(){
+$(document).on('click', '.js-minutes-other-btn', function(e){
+    e.preventDefault();
     $form_errors.html('');
     var minutes_estimate = parseInt($minutes_other.val());
     var orderpk = $this.data('orderpk');
@@ -250,9 +251,12 @@ $(document).on('click', '.js-minutes-other-btn', function(){
     }
 
     acceptOrder(orderpk, minutes_estimate);
+
+    return false;
 });
 
-$(document).on('click', '.js-minutes-btn', function(){
+$(document).on('click', '.js-minutes-btn', function(e){
+    e.preventDefault();
     $this = $(this);
     $form_errors.html('');
     var minutes_estimate = parseInt($this.data('minutes'));
@@ -264,6 +268,8 @@ $(document).on('click', '.js-minutes-btn', function(){
     }
 
     acceptOrder(orderpk, minutes_estimate);
+
+    return false;
 });
 
 function acceptOrder(orderpk, minutes_estimate)

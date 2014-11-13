@@ -27,10 +27,11 @@ class SubmitOrder(JSONResponseMixin, View):
             first_name = data.get('first_name')
             last_name = data.get('last_name')
             phone_number = data.get('phone_number')
+            cc_number = data.get('crimsoncash')
         except (IndexError, ValueError):
             return generic_error_response
 
-        if any(i is None for i in [tip, items, first_name, last_name, phone_number]):
+        if any(i is None for i in [tip, items, first_name, last_name, phone_number, cc_number]):
             return generic_error_response
 
         order_form = OrderForm(data={'tip': tip})
@@ -56,7 +57,7 @@ class SubmitOrder(JSONResponseMixin, View):
         elif not phone_number[:1] == '+':
             phone_number = u'+{}'.format(phone_number)
 
-        customer_form = CustomerForm(data={'first_name': first_name, 'last_name': last_name, 'phone': phone_number})
+        customer_form = CustomerForm(data={'first_name': first_name, 'last_name': last_name, 'phone': phone_number, 'cc_number': cc_number})
         if not customer_form.is_valid():
             return self.render_json_response({'status': 'error', 'errors': customer_form.errors})
 
@@ -67,11 +68,13 @@ class SubmitOrder(JSONResponseMixin, View):
         first_name = customer_form.cleaned_data.get('first_name')
         last_name = customer_form.cleaned_data.get('last_name')
         phone_number = customer_form.cleaned_data.get('phone')
+        cc_number = customer_form.cleaned_data.get('cc_number')
 
         customer, created = Customer.objects.get_or_create(
             first_name=first_name,
             last_name=last_name,
-            phone=phone_number
+            phone=phone_number,
+            cc_number=cc_number,
         )
 
         order = Order.objects.create(

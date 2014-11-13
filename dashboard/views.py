@@ -135,7 +135,7 @@ class Poll(JSONResponseMixin, View):
 
             payload.append({
                 'pk': order.pk,
-                'payment_type': order.payment_type,
+                'payment_type': order.payment_type_display,
                 'time': order.time.strftime('%m/%d %I:%M %p'),
                 'customer_name': order.customer.full_name,
                 'tip': order.tip,

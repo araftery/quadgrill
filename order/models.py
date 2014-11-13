@@ -98,6 +98,15 @@ class Order(models.Model):
     def number(self):
         return self.pk
 
+    @property
+    def payment_type_display(self):
+        payment_type = self.payment_type
+        if payment_type == 'Crimson Cash':
+            return u'{} ({})'.format(payment_type, self.customer.cc_number)
+        else:
+            return payment_type
+
+
     def get_short_tracking_url(self):
         return shorten_url('order:track', key=self.key)
 
