@@ -57,7 +57,6 @@ class AcceptOrder(JSONResponseMixin, View):
 
 class CancelOrder(JSONResponseMixin, View):
     def post(self, request, **kwargs):
-        print 'here1'
         generic_error_response = self.render_json_response({'status': 'error', 'errors': {'non_field_errors': 'Invalid submission.'}})
 
         cancel_verb = kwargs.get('cancel_verb')
@@ -66,7 +65,6 @@ class CancelOrder(JSONResponseMixin, View):
         if order_pk is None:
             return generic_error_response
 
-        print 'here2'
         try:
             order = Order.objects.get(pk=order_pk, completed=False, canceled=False)
         except Order.DoesNotExist:
@@ -74,18 +72,15 @@ class CancelOrder(JSONResponseMixin, View):
 
         cancellation_reason_form = CancellationReasonForm(data={'cancellation_reason': request.POST.get('cancellation_reason')})
 
-        print 'here2'
         if cancellation_reason_form.is_valid():
             cancellation_reason = cancellation_reason_form.cleaned_data.get('cancellation_reason')
         else:
             cancellation_reason = None
 
-        print 'here3'
         order.cancellation_reason = cancellation_reason
         order.canceled = True
         order.save()
 
-        print 'here4'
         send_text('cancel', unicode(order.customer.phone), {'order': order, 'verb': cancel_verb, 'reason': cancellation_reason})
 
         return self.render_json_response({'status': 'success'})
